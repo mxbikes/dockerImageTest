@@ -36,4 +36,4 @@ jobs:
           fetch-depth: 2  # required for codecov
       - name: Run Tests
         shell: bash
-        run: 'runchecks.sh'
+        run: '../../runchecks.sh'
