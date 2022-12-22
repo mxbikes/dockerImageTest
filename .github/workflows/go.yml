@@ -10,19 +10,30 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Note: we used to include windows-latest, but it's super
+        # flaky on Github runners, lots of OOMs.
+        os: [ubuntu-latest, macos-latest]
+        # When updating this, make sure to also update the
+        # latest_go_version variable in internal/testing/runchecks.sh.
+        go-version: [1.19.x]
+        include:
+          - go-version: 1.18.x
+            os: ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.19
-
-    - name: Build
-      run: find . -name go.mod -execdir go build ./... \;
-
-    - name: Test
-      run: find . -name go.mod -execdir go test ./... \;
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2  # required for codecov
+      - name: Run Tests
+        shell: bash
+        run: 'runchecks.sh'
